@@ -110,6 +110,17 @@
     }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: var(--accent2); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--dim);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--text); }
+    #fileRow {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
     #listEl {
       flex: 1;
       overflow-y: auto;
@@ -221,6 +232,63 @@
     #toast.ok   { border-color: var(--green); color: var(--green); }
     #toast.warn { border-color: #f0a500; color: #f0a500; }
 
+    /* ── 비밀번호 화면 ── */
+    #lockScreen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    #lockBox {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 320px;
+    }
+    #lockBox .lock-icon { font-size: 40px; }
+    #lockBox h2 { font-size: 16px; font-weight: 600; color: var(--text); }
+    #lockBox p  { font-size: 12px; color: var(--dim); text-align: center; }
+    #pwInput {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    #pwInput:focus { outline: none; border-color: var(--accent); }
+    #pwInput.error { border-color: var(--danger); animation: shake 0.3s; }
+    #btnUnlock {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #btnUnlock:hover { background: var(--accent2); }
+    #pwError { font-size: 12px; color: var(--danger); min-height: 16px; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+
     /* ── 스크롤바 ── */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -229,6 +297,18 @@
   </style>
 </head>
 <body>
+
+  <!-- ── 비밀번호 화면 ── -->
+  <div id="lockScreen">
+    <div id="lockBox">
+      <div class="lock-icon">🔒</div>
+      <h2>Mascot Player</h2>
+      <p>비밀번호를 입력하세요</p>
+      <input type="password" id="pwInput" placeholder="••••••" autocomplete="off">
+      <div id="pwError"></div>
+      <button id="btnUnlock" onclick="unlock()">확인</button>
+    </div>
+  </div>
 
   <!-- ── 플레이어 페이지 ── -->
   <main class="page active" id="pagePlayer">
@@ -244,6 +324,11 @@
 
   <!-- ── 목록 관리 페이지 ── -->
   <main class="page" id="pageList">
+    <div id="fileRow">
+      <button class="btn btn-secondary" onclick="exportPlaylist()">💾 저장</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📂 불러오기</button>
+      <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importPlaylist(event)">
+    </div>
     <div id="addRow">
       <input type="text" id="urlInput" placeholder="영상 URL (mp4, webm 등 직접 링크)">
       <button class="btn btn-primary" onclick="addUrl()">추가</button>
@@ -278,8 +363,39 @@
   <script>
     'use strict';
 
+    // SHA-256('qwer!')
+    const PW_HASH     = 'ac17acb00ef0daf73c6338504944d1ecbc364056696cafc090d88c7d7972f825';
     const STORAGE_KEY = 'mascot_playlist_v1';
     const REPEAT_KEY  = 'mascot_repeat_v1';
+
+    // ── 비밀번호 ──
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function unlock() {
+      const input = document.getElementById('pwInput');
+      const err   = document.getElementById('pwError');
+      const hash  = await sha256(input.value);
+
+      if (hash === PW_HASH) {
+        document.getElementById('lockScreen').style.display = 'none';
+        init();
+      } else {
+        err.textContent = '비밀번호가 틀렸습니다';
+        input.value = '';
+        input.classList.add('error');
+        setTimeout(() => input.classList.remove('error'), 400);
+        input.focus();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const pwInput = document.getElementById('pwInput');
+      pwInput.focus();
+      pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+    });
 
     let playlist     = [];
     let currentIndex = 0;
@@ -490,6 +606,41 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(playlist));
     }
 
+    // ── 파일 저장/불러오기 ──
+    function exportPlaylist() {
+      const data = JSON.stringify(playlist, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const a    = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = 'mascot-playlist.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importPlaylist(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (!Array.isArray(parsed)) throw new Error('배열 형식이 아닙니다');
+          playlist = parsed.map(item =>
+            typeof item === 'string' ? { url: item, normalized: false } : item
+          );
+          savePlaylist();
+          renderList();
+          if (playlist.length > 0) loadVideo(0, false);
+          else showEmpty(true);
+          showToast(`✓ ${playlist.length}개 항목 불러옴`, 'ok');
+        } catch {
+          showToast('파일을 읽을 수 없습니다', 'warn');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
     function getUrl(item) {
       return typeof item === 'string' ? item : item.url;
     }
@@ -523,7 +674,7 @@
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    init();
+    // init()은 비밀번호 확인 후 unlock()에서 호출됨
   </script>
 </body>
 </html>
