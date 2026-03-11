@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mascot Player</title>
+  <style>
+    :root {
+      --bg:      #0d0d12;
+      --surface: #16161f;
+      --surface2:#1e1e2a;
+      --border:  #2a2a3d;
+      --accent:  #7c6aff;
+      --accent2: #9b8dff;
+      --text:    #e2e2ed;
+      --dim:     #7a7a96;
+      --danger:  #ff5f5f;
+      --green:   #4caf86;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { height: 100%; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── PAGES ── */
+    .page { display: none; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; }
+    .page.active { display: flex; }
+
+    /* ── 플레이어 ── */
+    #videoWrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    #vid {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 10px;
+      background: #000;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    }
+    #emptyMsg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--dim);
+      font-size: 14px;
+    }
+    #emptyMsg .icon { font-size: 52px; }
+    #emptyMsg p { text-align: center; line-height: 1.6; }
+    #emptyMsg .go-btn {
+      margin-top: 8px;
+      padding: 8px 20px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    #emptyMsg .go-btn:hover { background: var(--accent2); }
+
+    /* ── 목록 관리 ── */
+    #pageList {
+      padding: 20px;
+      gap: 14px;
+    }
+    #addRow {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    #urlInput {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+    }
+    #urlInput:focus { outline: none; border-color: var(--accent); }
+    #urlInput::placeholder { color: var(--dim); }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent2); }
+    #listEl {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .list-item.current { border-color: var(--accent); background: rgba(124,106,255,0.08); }
+    .list-item.current .item-num { color: var(--accent); }
+    .item-num { font-size: 12px; color: var(--dim); min-width: 22px; font-weight: 700; }
+    .item-url { flex: 1; font-size: 12px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-play {
+      padding: 4px 10px; border-radius: 6px; border: 1px solid var(--accent);
+      background: transparent; color: var(--accent); cursor: pointer; font-size: 11px;
+      white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
+    }
+    .item-play:hover { background: var(--accent); color: #fff; }
+    .item-del {
+      padding: 4px 10px; border-radius: 6px; border: 1px solid var(--danger);
+      background: transparent; color: var(--danger); cursor: pointer; font-size: 11px;
+      flex-shrink: 0; transition: all 0.15s;
+    }
+    .item-del:hover { background: var(--danger); color: #fff; }
+    .norm-badge {
+      font-size: 10px; padding: 1px 6px; border-radius: 4px;
+      background: rgba(76,175,134,0.15); border: 1px solid var(--green);
+      color: var(--green); flex-shrink: 0; white-space: nowrap;
+    }
+    .empty-hint { text-align: center; color: var(--dim); font-size: 13px; padding: 40px 20px; line-height: 1.8; }
+
+    /* ── 공통 컨트롤 바 (항상 하단 고정) ── */
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    /* 탭 (왼쪽) */
+    .tabs { display: flex; gap: 4px; }
+    .tab {
+      padding: 5px 13px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); border-color: var(--accent); }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* 구분선 */
+    .sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+
+    /* 재생 버튼들 (가운데) */
+    .play-btns { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
+    .cbtn {
+      display: flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text); cursor: pointer; font-size: 15px; transition: all 0.15s;
+    }
+    .cbtn:hover { background: var(--accent); border-color: var(--accent); }
+    .cbtn.main {
+      width: 46px; height: 46px; font-size: 20px;
+      background: var(--accent); border-color: var(--accent);
+    }
+    .cbtn.main:hover { background: var(--accent2); }
+
+    /* 반복 설정 (오른쪽) */
+    .repeat-ctl {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--dim); white-space: nowrap;
+    }
+    .repeat-ctl input {
+      width: 52px; padding: 4px 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 13px; text-align: center;
+    }
+    .repeat-ctl input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── 토스트 ── */
+    #toast {
+      position: fixed; bottom: 70px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 16px; font-size: 12px; color: var(--text);
+      white-space: nowrap; z-index: 100; opacity: 0; pointer-events: none;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.ok   { border-color: var(--green); color: var(--green); }
+    #toast.warn { border-color: #f0a500; color: #f0a500; }
+
+    /* ── 스크롤바 ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+  </style>
+</head>
+<body>
+
+  <!-- ── 플레이어 페이지 ── -->
+  <main class="page active" id="pagePlayer">
+    <div id="videoWrap">
+      <video id="vid" controls></video>
+      <div id="emptyMsg">
+        <div class="icon">🎬</div>
+        <p>재생할 영상이 없습니다.<br>목록 관리에서 영상 URL을 추가해주세요.</p>
+        <button class="go-btn" onclick="showPage('list')">목록 관리로 이동 →</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── 목록 관리 페이지 ── -->
+  <main class="page" id="pageList">
+    <div id="addRow">
+      <input type="text" id="urlInput" placeholder="영상 URL (mp4, webm 등 직접 링크)">
+      <button class="btn btn-primary" onclick="addUrl()">추가</button>
+    </div>
+    <div id="listEl"></div>
+  </main>
+
+  <!-- ── 공통 컨트롤 바 ── -->
+  <div id="controls">
+    <div class="tabs">
+      <button class="tab active" id="tabPlayer" onclick="showPage('player')">플레이어</button>
+      <button class="tab"        id="tabList"   onclick="showPage('list')">목록</button>
+    </div>
+    <div class="sep"></div>
+    <div class="play-btns">
+      <button class="cbtn" title="이전 영상"         onclick="prevVideo()">⏮</button>
+      <button class="cbtn" title="처음부터"           onclick="restartCurrent()">⟳</button>
+      <button class="cbtn main" id="btnPP"           onclick="togglePlayPause()">⏸</button>
+      <button class="cbtn" title="다음 반복 건너뛰기" onclick="skipRepeat()">↪</button>
+      <button class="cbtn" title="다음 영상"          onclick="nextVideo()">⏭</button>
+    </div>
+    <div class="sep"></div>
+    <div class="repeat-ctl">
+      <span>반복</span>
+      <input type="number" id="repeatInput" min="1" max="999" value="1">
+      <span>회</span>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'mascot_playlist_v1';
+    const REPEAT_KEY  = 'mascot_repeat_v1';
+
+    let playlist     = [];
+    let currentIndex = 0;
+    let playCount    = 0;
+    let userPaused   = false;
+
+    const vid         = document.getElementById('vid');
+    const emptyMsg    = document.getElementById('emptyMsg');
+    const btnPP       = document.getElementById('btnPP');
+    const repeatInput = document.getElementById('repeatInput');
+
+    // ── 초기화 ──
+    function init() {
+      const savedList   = localStorage.getItem(STORAGE_KEY);
+      const savedRepeat = localStorage.getItem(REPEAT_KEY);
+      if (savedList) {
+        const parsed = JSON.parse(savedList);
+        playlist = parsed.map(item =>
+          typeof item === 'string' ? { url: item, normalized: false } : item
+        );
+      }
+      if (savedRepeat) repeatInput.value = savedRepeat;
+
+      repeatInput.addEventListener('change', () => {
+        repeatInput.value = Math.max(1, parseInt(repeatInput.value) || 1);
+        localStorage.setItem(REPEAT_KEY, repeatInput.value);
+        playCount = 0;
+      });
+      repeatInput.addEventListener('input', () => {
+        localStorage.setItem(REPEAT_KEY, repeatInput.value);
+      });
+
+      vid.addEventListener('ended',  onEnded);
+      vid.addEventListener('play',   () => { btnPP.textContent = '⏸'; });
+      vid.addEventListener('pause',  () => { btnPP.textContent = '▶'; });
+      vid.addEventListener('error',  onError);
+
+      document.getElementById('urlInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addUrl();
+      });
+
+      if (playlist.length > 0) loadVideo(currentIndex, false);
+      else showEmpty(true);
+    }
+
+    function getRepeat() {
+      return Math.max(1, parseInt(repeatInput.value) || 1);
+    }
+
+    // ── 영상 로드 ──
+    function loadVideo(index, autoplay = true) {
+      if (playlist.length === 0) { showEmpty(true); return; }
+      currentIndex = ((index % playlist.length) + playlist.length) % playlist.length;
+      playCount    = 0;
+      userPaused   = false;
+
+      vid.src = getUrl(playlist[currentIndex]);
+      showEmpty(false);
+      renderList();
+
+      if (autoplay) vid.play().catch(e => console.warn('play() blocked:', e));
+    }
+
+    function showEmpty(show) {
+      vid.style.display      = show ? 'none' : '';
+      emptyMsg.style.display = show ? '' : 'none';
+      if (show) btnPP.textContent = '▶';
+    }
+
+    // ── 재생 종료 ──
+    function onEnded() {
+      playCount++;
+      if (playCount < getRepeat()) {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      } else {
+        nextVideo();
+      }
+    }
+
+    function onError() {
+      setTimeout(() => nextVideo(), 1500);
+    }
+
+    // ── 재생 컨트롤 ──
+    function nextVideo() {
+      if (playlist.length === 0) return;
+      loadVideo(currentIndex + 1);
+    }
+
+    function prevVideo() {
+      if (playlist.length === 0) return;
+      if (vid.currentTime > 3) {
+        vid.currentTime = 0;
+        playCount = 0;
+      } else {
+        loadVideo(currentIndex - 1);
+      }
+    }
+
+    function restartCurrent() {
+      if (playlist.length === 0) return;
+      playCount = 0;
+      vid.currentTime = 0;
+      vid.play().catch(() => {});
+    }
+
+    function skipRepeat() {
+      if (playlist.length === 0) return;
+      playCount++;
+      if (playCount >= getRepeat()) {
+        nextVideo();
+      } else {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      }
+    }
+
+    function togglePlayPause() {
+      if (playlist.length === 0) { showPage('list'); return; }
+      if (vid.paused) vid.play().catch(() => {});
+      else vid.pause();
+    }
+
+    // ── 페이지 전환 ──
+    function showPage(name) {
+      document.getElementById('pagePlayer').classList.remove('active');
+      document.getElementById('pageList').classList.remove('active');
+      document.getElementById('tabPlayer').classList.remove('active');
+      document.getElementById('tabList').classList.remove('active');
+
+      if (name === 'player') {
+        document.getElementById('pagePlayer').classList.add('active');
+        document.getElementById('tabPlayer').classList.add('active');
+      } else {
+        document.getElementById('pageList').classList.add('active');
+        document.getElementById('tabList').classList.add('active');
+        renderList();
+      }
+    }
+
+    // ── URL 정규화 (civitai) ──
+    function normalizeCivitaiUrl(rawUrl) {
+      try {
+        const u = new URL(rawUrl);
+        if (u.hostname !== 'image.civitai.com') return { url: rawUrl, changed: false };
+        const parts = u.pathname.split('/').filter(Boolean);
+        if (parts.length < 3) return { url: rawUrl, changed: false };
+        const transformIdx = parts.findIndex(p => /\w+=/.test(p));
+        if (transformIdx === -1) return { url: rawUrl, changed: false };
+        const last = parts[parts.length - 1].toLowerCase();
+        if (!/\.(mp4|webm)$/.test(last)) return { url: rawUrl, changed: false };
+        const newTransform = 'transcode=true,original=true,quality=90';
+        if (parts[transformIdx] === newTransform) return { url: rawUrl, changed: false };
+        parts[transformIdx] = newTransform;
+        u.pathname = '/' + parts.join('/');
+        return { url: u.toString(), changed: true };
+      } catch {
+        return { url: rawUrl, changed: false };
+      }
+    }
+
+    // ── 토스트 ──
+    let toastTimer = null;
+    function showToast(msg, type = 'ok') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className   = 'show ' + type;
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.className = ''; }, 2800);
+    }
+
+    // ── 목록 관리 ──
+    function addUrl() {
+      const input = document.getElementById('urlInput');
+      const raw   = input.value.trim();
+      if (!raw) return;
+
+      const wasEmpty = playlist.length === 0;
+      let normalizedCount = 0;
+      raw.split(/\n/).map(u => u.trim()).filter(Boolean).forEach(line => {
+        const { url, changed } = normalizeCivitaiUrl(line);
+        playlist.push({ url, normalized: changed });
+        if (changed) normalizedCount++;
+      });
+
+      savePlaylist();
+      input.value = '';
+      renderList();
+      if (wasEmpty && playlist.length > 0) loadVideo(0);
+      if (normalizedCount > 0) showToast(`✓ ${normalizedCount}개 URL 자동 최적화됨`, 'ok');
+    }
+
+    function removeUrl(index) {
+      playlist.splice(index, 1);
+      savePlaylist();
+      if (playlist.length === 0) showEmpty(true);
+      else if (currentIndex >= playlist.length) currentIndex = 0;
+      renderList();
+    }
+
+    function playFrom(index) {
+      loadVideo(index);
+      showPage('player');
+    }
+
+    function savePlaylist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(playlist));
+    }
+
+    function getUrl(item) {
+      return typeof item === 'string' ? item : item.url;
+    }
+
+    function renderList() {
+      const el = document.getElementById('listEl');
+      if (playlist.length === 0) {
+        el.innerHTML = `<div class="empty-hint">아직 영상이 없습니다.<br>
+          mp4/webm 직접 링크를 입력하세요.<br>
+          civitai URL은 자동으로 원본 화질로 변환됩니다.<br>
+          여러 줄을 한 번에 붙여넣을 수 있습니다.</div>`;
+        return;
+      }
+      el.innerHTML = playlist.map((item, i) => {
+        const url   = getUrl(item);
+        const norm  = typeof item === 'object' && item.normalized;
+        const isCur = (i === currentIndex);
+        const label = url.length > 72 ? url.slice(0, 69) + '…' : url;
+        const badge = norm ? `<span class="norm-badge">최적화</span>` : '';
+        return `<div class="list-item ${isCur ? 'current' : ''}">
+          <span class="item-num">${i + 1}</span>
+          ${badge}
+          <span class="item-url" title="${escHtml(url)}">${escHtml(label)}</span>
+          <button class="item-play" onclick="playFrom(${i})">▶ 재생</button>
+          <button class="item-del"  onclick="removeUrl(${i})">삭제</button>
+        </div>`;
+      }).join('');
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    init();
+  </script>
+</body>
+</html>
