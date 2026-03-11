@@ -36,108 +36,106 @@
 
     /* ── 플레이어 ── */
     #videoWrap {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      position: relative;
-      overflow: hidden;
+      flex: 1; min-height: 0;
+      display: flex; align-items: center; justify-content: center;
+      padding: 12px; position: relative; overflow: hidden;
     }
     #vid {
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 10px;
-      background: #000;
+      max-width: 100%; max-height: 100%;
+      border-radius: 10px; background: #000;
       box-shadow: 0 8px 40px rgba(0,0,0,0.7);
     }
     #emptyMsg {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      color: var(--dim);
-      font-size: 14px;
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; color: var(--dim); font-size: 14px;
     }
     #emptyMsg .icon { font-size: 52px; }
     #emptyMsg p { text-align: center; line-height: 1.6; }
     #emptyMsg .go-btn {
-      margin-top: 8px;
-      padding: 8px 20px;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
+      margin-top: 8px; padding: 8px 20px; border-radius: 8px;
+      background: var(--accent); color: #fff; border: none;
+      cursor: pointer; font-size: 13px; font-weight: 600;
     }
     #emptyMsg .go-btn:hover { background: var(--accent2); }
 
     /* ── 목록 관리 ── */
-    #pageList {
-      padding: 20px;
-      gap: 14px;
-    }
-    #addRow {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    #urlInput {
-      flex: 1;
-      padding: 10px 14px;
+    #pageList { padding: 16px; gap: 10px; }
+
+    /* 클라우드 설정 패널 */
+    #cloudPanel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 13px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #cloudHeader {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; cursor: pointer;
+      user-select: none;
+    }
+    #cloudHeader:hover { background: var(--surface2); }
+    #cloudTitle { font-size: 13px; font-weight: 600; flex: 1; }
+    #cloudStatus {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--dim);
+    }
+    #cloudStatus.ok   { border-color: var(--green); color: var(--green); background: rgba(76,175,134,0.1); }
+    #cloudStatus.err  { border-color: var(--danger); color: var(--danger); background: rgba(255,95,95,0.1); }
+    #cloudStatus.sync { border-color: #f0a500; color: #f0a500; background: rgba(240,165,0,0.1); }
+    #cloudArrow { font-size: 11px; color: var(--dim); transition: transform 0.2s; }
+    #cloudArrow.open { transform: rotate(180deg); }
+
+    #cloudBody {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+    }
+    #cloudBody.open { display: flex; }
+    .cloud-row { display: flex; align-items: center; gap: 8px; }
+    .cloud-label { font-size: 12px; color: var(--dim); min-width: 60px; }
+    .cloud-input {
+      flex: 1; padding: 7px 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 12px; font-family: monospace;
+    }
+    .cloud-input:focus { outline: none; border-color: var(--accent); }
+    .cloud-input::placeholder { color: var(--dim); }
+    .cloud-hint { font-size: 11px; color: var(--dim); line-height: 1.6; }
+    .cloud-hint a { color: var(--accent); }
+    .cloud-btns { display: flex; gap: 6px; }
+
+    #addRow { display: flex; gap: 8px; flex-shrink: 0; }
+    #urlInput {
+      flex: 1; padding: 10px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 13px;
     }
     #urlInput:focus { outline: none; border-color: var(--accent); }
     #urlInput::placeholder { color: var(--dim); }
+
+    #fileRow { display: flex; gap: 8px; flex-shrink: 0; }
+
     .btn {
-      padding: 10px 20px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: all 0.15s;
+      padding: 8px 16px; border-radius: 8px; border: none;
+      cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s;
+      white-space: nowrap;
     }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent2); }
-    .btn-secondary {
-      background: transparent;
-      color: var(--dim);
-      border: 1px solid var(--border);
-    }
+    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-primary:hover  { background: var(--accent2); }
+    .btn-secondary { background: transparent; color: var(--dim); border: 1px solid var(--border); }
     .btn-secondary:hover { border-color: var(--accent); color: var(--text); }
-    #fileRow {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    #listEl {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    #listEl { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
     .list-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      transition: border-color 0.15s;
-      flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px;
+      transition: border-color 0.15s; flex-shrink: 0;
     }
     .list-item.current { border-color: var(--accent); background: rgba(124,106,255,0.08); }
     .list-item.current .item-num { color: var(--accent); }
@@ -151,8 +149,8 @@
     .item-play:hover { background: var(--accent); color: #fff; }
     .item-del {
       padding: 4px 10px; border-radius: 6px; border: 1px solid var(--danger);
-      background: transparent; color: var(--danger); cursor: pointer; font-size: 11px;
-      flex-shrink: 0; transition: all 0.15s;
+      background: transparent; color: var(--danger); cursor: pointer;
+      font-size: 11px; flex-shrink: 0; transition: all 0.15s;
     }
     .item-del:hover { background: var(--danger); color: #fff; }
     .norm-badge {
@@ -162,37 +160,21 @@
     }
     .empty-hint { text-align: center; color: var(--dim); font-size: 13px; padding: 40px 20px; line-height: 1.8; }
 
-    /* ── 공통 컨트롤 바 (항상 하단 고정) ── */
+    /* ── 컨트롤 바 ── */
     #controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 16px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; background: var(--surface);
+      border-top: 1px solid var(--border); flex-shrink: 0;
     }
-    /* 탭 (왼쪽) */
     .tabs { display: flex; gap: 4px; }
     .tab {
-      padding: 5px 13px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--dim);
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: all 0.15s;
-      white-space: nowrap;
+      padding: 5px 13px; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--dim); cursor: pointer;
+      font-size: 12px; font-weight: 500; transition: all 0.15s; white-space: nowrap;
     }
     .tab:hover { color: var(--text); border-color: var(--accent); }
     .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-    /* 구분선 */
     .sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
-
-    /* 재생 버튼들 (가운데) */
     .play-btns { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
     .cbtn {
       display: flex; align-items: center; justify-content: center;
@@ -201,21 +183,13 @@
       color: var(--text); cursor: pointer; font-size: 15px; transition: all 0.15s;
     }
     .cbtn:hover { background: var(--accent); border-color: var(--accent); }
-    .cbtn.main {
-      width: 46px; height: 46px; font-size: 20px;
-      background: var(--accent); border-color: var(--accent);
-    }
+    .cbtn.main { width: 46px; height: 46px; font-size: 20px; background: var(--accent); border-color: var(--accent); }
     .cbtn.main:hover { background: var(--accent2); }
-
-    /* 반복 설정 (오른쪽) */
-    .repeat-ctl {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--dim); white-space: nowrap;
-    }
+    .repeat-ctl { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); white-space: nowrap; }
     .repeat-ctl input {
-      width: 52px; padding: 4px 6px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text); font-size: 13px; text-align: center;
+      width: 52px; padding: 4px 6px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 13px; text-align: center;
     }
     .repeat-ctl input:focus { outline: none; border-color: var(--accent); }
 
@@ -234,52 +208,30 @@
 
     /* ── 비밀번호 화면 ── */
     #lockScreen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; z-index: 999;
     }
     #lockBox {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 40px 36px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      width: 320px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 40px 36px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; width: 320px;
     }
     #lockBox .lock-icon { font-size: 40px; }
-    #lockBox h2 { font-size: 16px; font-weight: 600; color: var(--text); }
+    #lockBox h2 { font-size: 16px; font-weight: 600; }
     #lockBox p  { font-size: 12px; color: var(--dim); text-align: center; }
     #pwInput {
-      width: 100%;
-      padding: 10px 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 15px;
-      text-align: center;
-      letter-spacing: 2px;
+      width: 100%; padding: 10px 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 15px;
+      text-align: center; letter-spacing: 2px;
     }
     #pwInput:focus { outline: none; border-color: var(--accent); }
     #pwInput.error { border-color: var(--danger); animation: shake 0.3s; }
     #btnUnlock {
-      width: 100%;
-      padding: 10px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
+      width: 100%; padding: 10px; background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
     }
     #btnUnlock:hover { background: var(--accent2); }
     #pwError { font-size: 12px; color: var(--danger); min-height: 16px; }
@@ -324,19 +276,54 @@
 
   <!-- ── 목록 관리 페이지 ── -->
   <main class="page" id="pageList">
+
+    <!-- 클라우드 동기화 설정 -->
+    <div id="cloudPanel">
+      <div id="cloudHeader" onclick="toggleCloud()">
+        <span>☁️</span>
+        <span id="cloudTitle">클라우드 동기화 (JSONBin)</span>
+        <span id="cloudStatus">미설정</span>
+        <span id="cloudArrow">▼</span>
+      </div>
+      <div id="cloudBody">
+        <p class="cloud-hint">
+          <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> 가입 후
+          API Key와 Bin ID를 입력하면 모든 브라우저에서 목록이 공유됩니다.<br>
+          Bin ID가 없으면 비워두세요 — 자동으로 생성합니다.
+        </p>
+        <div class="cloud-row">
+          <span class="cloud-label">API Key</span>
+          <input class="cloud-input" id="jbKey" type="password" placeholder="$2a$10$...">
+        </div>
+        <div class="cloud-row">
+          <span class="cloud-label">Bin ID</span>
+          <input class="cloud-input" id="jbBin" type="text" placeholder="자동 생성 (비워두기 가능)">
+        </div>
+        <div class="cloud-btns">
+          <button class="btn btn-primary btn-sm" onclick="saveCloudSettings()">연결</button>
+          <button class="btn btn-secondary btn-sm" onclick="cloudSync()">지금 동기화</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearCloudSettings()">연결 해제</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 파일 가져오기/내보내기 -->
     <div id="fileRow">
       <button class="btn btn-secondary" onclick="exportPlaylist()">💾 저장</button>
       <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📂 불러오기</button>
       <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importPlaylist(event)">
     </div>
+
+    <!-- URL 추가 -->
     <div id="addRow">
       <input type="text" id="urlInput" placeholder="영상 URL (mp4, webm 등 직접 링크)">
       <button class="btn btn-primary" onclick="addUrl()">추가</button>
     </div>
+
     <div id="listEl"></div>
   </main>
 
-  <!-- ── 공통 컨트롤 바 ── -->
+  <!-- ── 컨트롤 바 ── -->
   <div id="controls">
     <div class="tabs">
       <button class="tab active" id="tabPlayer" onclick="showPage('player')">플레이어</button>
@@ -344,11 +331,11 @@
     </div>
     <div class="sep"></div>
     <div class="play-btns">
-      <button class="cbtn" title="이전 영상"         onclick="prevVideo()">⏮</button>
-      <button class="cbtn" title="처음부터"           onclick="restartCurrent()">⟳</button>
-      <button class="cbtn main" id="btnPP"           onclick="togglePlayPause()">⏸</button>
-      <button class="cbtn" title="다음 반복 건너뛰기" onclick="skipRepeat()">↪</button>
-      <button class="cbtn" title="다음 영상"          onclick="nextVideo()">⏭</button>
+      <button class="cbtn" title="이전"           onclick="prevVideo()">⏮</button>
+      <button class="cbtn" title="처음부터"        onclick="restartCurrent()">⟳</button>
+      <button class="cbtn main" id="btnPP"        onclick="togglePlayPause()">⏸</button>
+      <button class="cbtn" title="반복 건너뛰기"   onclick="skipRepeat()">↪</button>
+      <button class="cbtn" title="다음"            onclick="nextVideo()">⏭</button>
     </div>
     <div class="sep"></div>
     <div class="repeat-ctl">
@@ -367,6 +354,9 @@
     const PW_HASH     = 'ac17acb00ef0daf73c6338504944d1ecbc364056696cafc090d88c7d7972f825';
     const STORAGE_KEY = 'mascot_playlist_v1';
     const REPEAT_KEY  = 'mascot_repeat_v1';
+    const JB_KEY_K    = 'mascot_jb_key';
+    const JB_BIN_K    = 'mascot_jb_bin';
+    const JBIN_API    = 'https://api.jsonbin.io/v3/b';
 
     // ── 비밀번호 ──
     async function sha256(str) {
@@ -378,7 +368,6 @@
       const input = document.getElementById('pwInput');
       const err   = document.getElementById('pwError');
       const hash  = await sha256(input.value);
-
       if (hash === PW_HASH) {
         document.getElementById('lockScreen').style.display = 'none';
         init();
@@ -392,15 +381,15 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      const pwInput = document.getElementById('pwInput');
-      pwInput.focus();
-      pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+      const pw = document.getElementById('pwInput');
+      pw.focus();
+      pw.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
     });
 
+    // ── 상태 ──
     let playlist     = [];
     let currentIndex = 0;
     let playCount    = 0;
-    let userPaused   = false;
 
     const vid         = document.getElementById('vid');
     const emptyMsg    = document.getElementById('emptyMsg');
@@ -408,7 +397,8 @@
     const repeatInput = document.getElementById('repeatInput');
 
     // ── 초기화 ──
-    function init() {
+    async function init() {
+      // 로컬 스토리지 우선 로드 (빠른 렌더)
       const savedList   = localStorage.getItem(STORAGE_KEY);
       const savedRepeat = localStorage.getItem(REPEAT_KEY);
       if (savedList) {
@@ -427,22 +417,28 @@
       repeatInput.addEventListener('input', () => {
         localStorage.setItem(REPEAT_KEY, repeatInput.value);
       });
-
       vid.addEventListener('ended',  onEnded);
       vid.addEventListener('play',   () => { btnPP.textContent = '⏸'; });
       vid.addEventListener('pause',  () => { btnPP.textContent = '▶'; });
       vid.addEventListener('error',  onError);
-
       document.getElementById('urlInput').addEventListener('keydown', e => {
         if (e.key === 'Enter') addUrl();
       });
 
       if (playlist.length > 0) loadVideo(currentIndex, false);
       else showEmpty(true);
-    }
 
-    function getRepeat() {
-      return Math.max(1, parseInt(repeatInput.value) || 1);
+      // 저장된 클라우드 자격증명 복원
+      const savedKey = localStorage.getItem(JB_KEY_K);
+      const savedBin = localStorage.getItem(JB_BIN_K);
+      if (savedKey) document.getElementById('jbKey').value = savedKey;
+      if (savedBin) document.getElementById('jbBin').value = savedBin;
+      updateCloudStatus();
+
+      // 클라우드에서 최신 목록 가져오기
+      if (savedKey && savedBin) {
+        await cloudSync(true);
+      }
     }
 
     // ── 영상 로드 ──
@@ -450,12 +446,9 @@
       if (playlist.length === 0) { showEmpty(true); return; }
       currentIndex = ((index % playlist.length) + playlist.length) % playlist.length;
       playCount    = 0;
-      userPaused   = false;
-
-      vid.src = getUrl(playlist[currentIndex]);
+      vid.src      = getUrl(playlist[currentIndex]);
       showEmpty(false);
       renderList();
-
       if (autoplay) vid.play().catch(e => console.warn('play() blocked:', e));
     }
 
@@ -465,7 +458,6 @@
       if (show) btnPP.textContent = '▶';
     }
 
-    // ── 재생 종료 ──
     function onEnded() {
       playCount++;
       if (playCount < getRepeat()) {
@@ -476,57 +468,36 @@
       }
     }
 
-    function onError() {
-      setTimeout(() => nextVideo(), 1500);
-    }
+    function onError() { setTimeout(() => nextVideo(), 1500); }
+
+    function getRepeat() { return Math.max(1, parseInt(repeatInput.value) || 1); }
 
     // ── 재생 컨트롤 ──
-    function nextVideo() {
-      if (playlist.length === 0) return;
-      loadVideo(currentIndex + 1);
-    }
-
+    function nextVideo() { if (playlist.length) loadVideo(currentIndex + 1); }
     function prevVideo() {
-      if (playlist.length === 0) return;
-      if (vid.currentTime > 3) {
-        vid.currentTime = 0;
-        playCount = 0;
-      } else {
-        loadVideo(currentIndex - 1);
-      }
+      if (!playlist.length) return;
+      if (vid.currentTime > 3) { vid.currentTime = 0; playCount = 0; }
+      else loadVideo(currentIndex - 1);
     }
-
     function restartCurrent() {
-      if (playlist.length === 0) return;
-      playCount = 0;
-      vid.currentTime = 0;
-      vid.play().catch(() => {});
+      if (!playlist.length) return;
+      playCount = 0; vid.currentTime = 0; vid.play().catch(() => {});
     }
-
     function skipRepeat() {
-      if (playlist.length === 0) return;
-      playCount++;
-      if (playCount >= getRepeat()) {
-        nextVideo();
-      } else {
-        vid.currentTime = 0;
-        vid.play().catch(() => {});
-      }
+      if (!playlist.length) return;
+      if (++playCount >= getRepeat()) nextVideo();
+      else { vid.currentTime = 0; vid.play().catch(() => {}); }
     }
-
     function togglePlayPause() {
-      if (playlist.length === 0) { showPage('list'); return; }
+      if (!playlist.length) { showPage('list'); return; }
       if (vid.paused) vid.play().catch(() => {});
       else vid.pause();
     }
 
     // ── 페이지 전환 ──
     function showPage(name) {
-      document.getElementById('pagePlayer').classList.remove('active');
-      document.getElementById('pageList').classList.remove('active');
-      document.getElementById('tabPlayer').classList.remove('active');
-      document.getElementById('tabList').classList.remove('active');
-
+      ['pagePlayer','pageList'].forEach(id => document.getElementById(id).classList.remove('active'));
+      ['tabPlayer','tabList'].forEach(id => document.getElementById(id).classList.remove('active'));
       if (name === 'player') {
         document.getElementById('pagePlayer').classList.add('active');
         document.getElementById('tabPlayer').classList.add('active');
@@ -537,6 +508,130 @@
       }
     }
 
+    // ── 클라우드 동기화 (JSONBin.io) ──
+    function getCredentials() {
+      return {
+        key: localStorage.getItem(JB_KEY_K) || '',
+        bin: localStorage.getItem(JB_BIN_K) || '',
+      };
+    }
+
+    function updateCloudStatus(state, msg) {
+      const el = document.getElementById('cloudStatus');
+      const { key, bin } = getCredentials();
+      if (!key)   { el.className = ''; el.textContent = '미설정'; return; }
+      if (!bin)   { el.className = ''; el.textContent = 'Key만 설정됨'; return; }
+      if (state)  { el.className = state; el.textContent = msg; return; }
+      el.className = 'ok'; el.textContent = '연결됨';
+    }
+
+    async function cloudSync(silent = false) {
+      const { key, bin } = getCredentials();
+      if (!key || !bin) return;
+      if (!silent) setCloudStatus('sync', '동기화 중…');
+      try {
+        const res  = await fetch(`${JBIN_API}/${bin}/latest`, {
+          headers: { 'X-Master-Key': key }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const data = json.record;
+        if (!Array.isArray(data)) throw new Error('형식 오류');
+
+        playlist = data.map(item =>
+          typeof item === 'string' ? { url: item, normalized: false } : item
+        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(playlist));
+        renderList();
+        if (playlist.length > 0 && vid.src === '') loadVideo(0, false);
+        else if (playlist.length === 0) showEmpty(true);
+
+        setCloudStatus('ok', '동기화됨');
+        if (!silent) showToast('☁️ 클라우드에서 불러옴', 'ok');
+      } catch (e) {
+        setCloudStatus('err', '오류');
+        if (!silent) showToast(`동기화 실패: ${e.message}`, 'warn');
+      }
+    }
+
+    async function cloudPush() {
+      const { key, bin } = getCredentials();
+      if (!key || !bin) return;
+      try {
+        const res = await fetch(`${JBIN_API}/${bin}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
+          body: JSON.stringify(playlist),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setCloudStatus('ok', '동기화됨');
+      } catch (e) {
+        setCloudStatus('err', '저장 실패');
+        showToast(`클라우드 저장 실패: ${e.message}`, 'warn');
+      }
+    }
+
+    async function cloudCreateBin(key) {
+      const res = await fetch(JBIN_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': key,
+          'X-Bin-Name': 'mascot-playlist',
+          'X-Private': 'true',
+        },
+        body: JSON.stringify(playlist),
+      });
+      if (!res.ok) throw new Error(`Bin 생성 실패 (HTTP ${res.status})`);
+      const json = await res.json();
+      return json.metadata.id;
+    }
+
+    async function saveCloudSettings() {
+      const key = document.getElementById('jbKey').value.trim();
+      let   bin = document.getElementById('jbBin').value.trim();
+      if (!key) { showToast('API Key를 입력하세요', 'warn'); return; }
+
+      setCloudStatus('sync', '연결 중…');
+      try {
+        if (!bin) {
+          // Bin 자동 생성
+          bin = await cloudCreateBin(key);
+          document.getElementById('jbBin').value = bin;
+          showToast(`✓ Bin 생성됨: ${bin}`, 'ok');
+        }
+        localStorage.setItem(JB_KEY_K, key);
+        localStorage.setItem(JB_BIN_K, bin);
+        updateCloudStatus();
+        // 연결 확인 겸 동기화
+        await cloudSync(false);
+      } catch (e) {
+        setCloudStatus('err', '연결 실패');
+        showToast(`연결 실패: ${e.message}`, 'warn');
+      }
+    }
+
+    function clearCloudSettings() {
+      localStorage.removeItem(JB_KEY_K);
+      localStorage.removeItem(JB_BIN_K);
+      document.getElementById('jbKey').value = '';
+      document.getElementById('jbBin').value = '';
+      updateCloudStatus();
+      showToast('클라우드 연결 해제됨', 'ok');
+    }
+
+    function setCloudStatus(cls, text) {
+      const el = document.getElementById('cloudStatus');
+      el.className = cls; el.textContent = text;
+    }
+
+    function toggleCloud() {
+      const body  = document.getElementById('cloudBody');
+      const arrow = document.getElementById('cloudArrow');
+      const open  = body.classList.toggle('open');
+      arrow.classList.toggle('open', open);
+    }
+
     // ── URL 정규화 (civitai) ──
     function normalizeCivitaiUrl(rawUrl) {
       try {
@@ -544,26 +639,22 @@
         if (u.hostname !== 'image.civitai.com') return { url: rawUrl, changed: false };
         const parts = u.pathname.split('/').filter(Boolean);
         if (parts.length < 3) return { url: rawUrl, changed: false };
-        const transformIdx = parts.findIndex(p => /\w+=/.test(p));
-        if (transformIdx === -1) return { url: rawUrl, changed: false };
-        const last = parts[parts.length - 1].toLowerCase();
-        if (!/\.(mp4|webm)$/.test(last)) return { url: rawUrl, changed: false };
-        const newTransform = 'transcode=true,original=true,quality=90';
-        if (parts[transformIdx] === newTransform) return { url: rawUrl, changed: false };
-        parts[transformIdx] = newTransform;
+        const ti = parts.findIndex(p => /\w+=/.test(p));
+        if (ti === -1) return { url: rawUrl, changed: false };
+        if (!/\.(mp4|webm)$/i.test(parts[parts.length - 1])) return { url: rawUrl, changed: false };
+        const nt = 'transcode=true,original=true,quality=90';
+        if (parts[ti] === nt) return { url: rawUrl, changed: false };
+        parts[ti] = nt;
         u.pathname = '/' + parts.join('/');
         return { url: u.toString(), changed: true };
-      } catch {
-        return { url: rawUrl, changed: false };
-      }
+      } catch { return { url: rawUrl, changed: false }; }
     }
 
     // ── 토스트 ──
     let toastTimer = null;
     function showToast(msg, type = 'ok') {
       const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.className   = 'show ' + type;
+      el.textContent = msg; el.className = 'show ' + type;
       if (toastTimer) clearTimeout(toastTimer);
       toastTimer = setTimeout(() => { el.className = ''; }, 2800);
     }
@@ -573,20 +664,18 @@
       const input = document.getElementById('urlInput');
       const raw   = input.value.trim();
       if (!raw) return;
-
       const wasEmpty = playlist.length === 0;
-      let normalizedCount = 0;
+      let normCount  = 0;
       raw.split(/\n/).map(u => u.trim()).filter(Boolean).forEach(line => {
         const { url, changed } = normalizeCivitaiUrl(line);
         playlist.push({ url, normalized: changed });
-        if (changed) normalizedCount++;
+        if (changed) normCount++;
       });
-
       savePlaylist();
       input.value = '';
       renderList();
       if (wasEmpty && playlist.length > 0) loadVideo(0);
-      if (normalizedCount > 0) showToast(`✓ ${normalizedCount}개 URL 자동 최적화됨`, 'ok');
+      if (normCount > 0) showToast(`✓ ${normCount}개 URL 자동 최적화됨`, 'ok');
     }
 
     function removeUrl(index) {
@@ -597,24 +686,18 @@
       renderList();
     }
 
-    function playFrom(index) {
-      loadVideo(index);
-      showPage('player');
-    }
+    function playFrom(index) { loadVideo(index); showPage('player'); }
 
     function savePlaylist() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(playlist));
+      cloudPush(); // 비동기 클라우드 저장
     }
 
-    // ── 파일 저장/불러오기 ──
     function exportPlaylist() {
-      const data = JSON.stringify(playlist, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const a    = document.createElement('a');
-      a.href     = URL.createObjectURL(blob);
-      a.download = 'mascot-playlist.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
+      const blob = new Blob([JSON.stringify(playlist, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'mascot-playlist.json';
+      a.click(); URL.revokeObjectURL(a.href);
     }
 
     function importPlaylist(event) {
@@ -624,7 +707,7 @@
       reader.onload = (e) => {
         try {
           const parsed = JSON.parse(e.target.result);
-          if (!Array.isArray(parsed)) throw new Error('배열 형식이 아닙니다');
+          if (!Array.isArray(parsed)) throw new Error();
           playlist = parsed.map(item =>
             typeof item === 'string' ? { url: item, normalized: false } : item
           );
@@ -633,25 +716,20 @@
           if (playlist.length > 0) loadVideo(0, false);
           else showEmpty(true);
           showToast(`✓ ${playlist.length}개 항목 불러옴`, 'ok');
-        } catch {
-          showToast('파일을 읽을 수 없습니다', 'warn');
-        }
+        } catch { showToast('파일을 읽을 수 없습니다', 'warn'); }
         event.target.value = '';
       };
       reader.readAsText(file);
     }
 
-    function getUrl(item) {
-      return typeof item === 'string' ? item : item.url;
-    }
+    function getUrl(item) { return typeof item === 'string' ? item : item.url; }
 
     function renderList() {
       const el = document.getElementById('listEl');
       if (playlist.length === 0) {
         el.innerHTML = `<div class="empty-hint">아직 영상이 없습니다.<br>
           mp4/webm 직접 링크를 입력하세요.<br>
-          civitai URL은 자동으로 원본 화질로 변환됩니다.<br>
-          여러 줄을 한 번에 붙여넣을 수 있습니다.</div>`;
+          civitai URL은 자동으로 원본 화질로 변환됩니다.</div>`;
         return;
       }
       el.innerHTML = playlist.map((item, i) => {
@@ -661,8 +739,7 @@
         const label = url.length > 72 ? url.slice(0, 69) + '…' : url;
         const badge = norm ? `<span class="norm-badge">최적화</span>` : '';
         return `<div class="list-item ${isCur ? 'current' : ''}">
-          <span class="item-num">${i + 1}</span>
-          ${badge}
+          <span class="item-num">${i + 1}</span>${badge}
           <span class="item-url" title="${escHtml(url)}">${escHtml(label)}</span>
           <button class="item-play" onclick="playFrom(${i})">▶ 재생</button>
           <button class="item-del"  onclick="removeUrl(${i})">삭제</button>
