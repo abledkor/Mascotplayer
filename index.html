@@ -135,11 +135,20 @@
       display: flex; align-items: center; gap: 10px;
       padding: 10px 14px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 8px;
-      transition: border-color 0.15s; flex-shrink: 0;
+      transition: border-color 0.15s, opacity 0.15s; flex-shrink: 0;
+      cursor: default;
     }
     .list-item.current { border-color: var(--accent); background: rgba(124,106,255,0.08); }
     .list-item.current .item-num { color: var(--accent); }
+    .list-item.dragging { opacity: 0.35; }
+    .list-item.drag-over { border-color: var(--accent2); border-style: dashed; }
     .item-num { font-size: 12px; color: var(--dim); min-width: 22px; font-weight: 700; }
+    .drag-handle {
+      color: var(--border); font-size: 14px; cursor: grab;
+      padding: 0 2px; flex-shrink: 0; line-height: 1;
+      user-select: none;
+    }
+    .drag-handle:active { cursor: grabbing; }
     .item-url { flex: 1; font-size: 12px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .item-play {
       padding: 4px 10px; border-radius: 6px; border: 1px solid var(--accent);
@@ -302,7 +311,8 @@
         </div>
         <div class="cloud-btns">
           <button class="btn btn-primary btn-sm" onclick="saveCloudSettings()">연결</button>
-          <button class="btn btn-secondary btn-sm" onclick="cloudSync()">지금 동기화</button>
+          <button class="btn btn-secondary btn-sm" onclick="cloudSync()">☁️→ 불러오기</button>
+          <button class="btn btn-secondary btn-sm" onclick="cloudPush().then(()=>showToast('☁️ 저장됨','ok'))">→☁️ 저장</button>
           <button class="btn btn-secondary btn-sm" onclick="clearCloudSettings()">연결 해제</button>
         </div>
       </div>
@@ -535,7 +545,16 @@
           headers: { 'X-Master-Key': key }
         });
         if (res.status === 401) throw new Error('API Key 오류 — Secret Key를 확인하세요');
-        if (res.status === 404) throw new Error('Bin ID를 찾을 수 없습니다');
+        if (res.status === 404) {
+          // Bin이 없으면 자동 재생성
+          showToast('Bin이 없습니다. 재생성 중…', 'warn');
+          const newBin = await cloudCreateBin(key);
+          localStorage.setItem(JB_BIN_K, newBin);
+          document.getElementById('jbBin').value = newBin;
+          setCloudStatus('ok', '동기화됨');
+          showToast(`✓ Bin 재생성됨 (${newBin})`, 'ok');
+          return;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const data = json.record;
@@ -583,10 +602,13 @@
         },
         body: JSON.stringify(playlist.length ? playlist : []),
       });
-      if (res.status === 401) throw new Error('API Key가 올바르지 않습니다.\n대시보드 → API Keys → Secret Key를 사용하세요.');
+      if (res.status === 401) throw new Error('API Key 오류 — Secret Key를 확인하세요');
       if (!res.ok) throw new Error(`Bin 생성 실패 (HTTP ${res.status})`);
       const json = await res.json();
-      return json.metadata.id;
+      // JSONBin v3: metadata.id, 일부 버전: id
+      const id = json?.metadata?.id ?? json?.id;
+      if (!id) throw new Error('Bin ID를 응답에서 찾을 수 없습니다: ' + JSON.stringify(json));
+      return id;
     }
 
     async function saveCloudSettings() {
@@ -726,6 +748,9 @@
 
     function getUrl(item) { return typeof item === 'string' ? item : item.url; }
 
+    // ── 드래그앤드롭 상태 ──
+    let dragSrcIdx = null;
+
     function renderList() {
       const el = document.getElementById('listEl');
       if (playlist.length === 0) {
@@ -734,19 +759,70 @@
           civitai URL은 자동으로 원본 화질로 변환됩니다.</div>`;
         return;
       }
-      el.innerHTML = playlist.map((item, i) => {
+
+      el.innerHTML = '';
+      playlist.forEach((item, i) => {
         const url   = getUrl(item);
         const norm  = typeof item === 'object' && item.normalized;
         const isCur = (i === currentIndex);
-        const label = url.length > 72 ? url.slice(0, 69) + '…' : url;
-        const badge = norm ? `<span class="norm-badge">최적화</span>` : '';
-        return `<div class="list-item ${isCur ? 'current' : ''}">
-          <span class="item-num">${i + 1}</span>${badge}
+        const label = url.length > 66 ? url.slice(0, 63) + '…' : url;
+
+        const row = document.createElement('div');
+        row.className = `list-item${isCur ? ' current' : ''}`;
+        row.draggable = true;
+        row.dataset.idx = i;
+
+        row.innerHTML = `
+          <span class="drag-handle" title="드래그하여 순서 변경">⠿</span>
+          <span class="item-num">${i + 1}</span>
+          ${norm ? '<span class="norm-badge">최적화</span>' : ''}
           <span class="item-url" title="${escHtml(url)}">${escHtml(label)}</span>
-          <button class="item-play" onclick="playFrom(${i})">▶ 재생</button>
-          <button class="item-del"  onclick="removeUrl(${i})">삭제</button>
-        </div>`;
-      }).join('');
+          <button class="item-play">▶ 재생</button>
+          <button class="item-del">삭제</button>`;
+
+        row.querySelector('.item-play').onclick = () => playFrom(i);
+        row.querySelector('.item-del').onclick  = () => removeUrl(i);
+
+        // 드래그 이벤트 — 핸들에서만 시작
+        row.querySelector('.drag-handle').addEventListener('mousedown', () => {
+          row.draggable = true;
+        });
+        row.addEventListener('dragstart', e => {
+          dragSrcIdx = i;
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => row.classList.add('dragging'), 0);
+        });
+        row.addEventListener('dragend', () => {
+          row.classList.remove('dragging');
+          el.querySelectorAll('.drag-over').forEach(r => r.classList.remove('drag-over'));
+        });
+        row.addEventListener('dragover', e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          el.querySelectorAll('.drag-over').forEach(r => r.classList.remove('drag-over'));
+          if (dragSrcIdx !== i) row.classList.add('drag-over');
+        });
+        row.addEventListener('drop', e => {
+          e.preventDefault();
+          if (dragSrcIdx === null || dragSrcIdx === i) return;
+          // 배열 재정렬
+          const moved = playlist.splice(dragSrcIdx, 1)[0];
+          playlist.splice(i, 0, moved);
+          // currentIndex 보정
+          if (currentIndex === dragSrcIdx) {
+            currentIndex = i;
+          } else if (dragSrcIdx < currentIndex && i >= currentIndex) {
+            currentIndex--;
+          } else if (dragSrcIdx > currentIndex && i <= currentIndex) {
+            currentIndex++;
+          }
+          dragSrcIdx = null;
+          savePlaylist();
+          renderList();
+        });
+
+        el.appendChild(row);
+      });
     }
 
     function escHtml(s) {
