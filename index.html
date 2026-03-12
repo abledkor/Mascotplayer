@@ -287,9 +287,10 @@
       </div>
       <div id="cloudBody">
         <p class="cloud-hint">
-          <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> 가입 후
-          API Key와 Bin ID를 입력하면 모든 브라우저에서 목록이 공유됩니다.<br>
-          Bin ID가 없으면 비워두세요 — 자동으로 생성합니다.
+          <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> 가입 →
+          대시보드 → <b>API Keys</b> → <b>Secret Key</b> 복사 후 입력.<br>
+          ⚠️ Access Key가 아닌 <b>Secret Key</b>를 사용해야 합니다.<br>
+          Bin ID는 비워두면 자동 생성됩니다.
         </p>
         <div class="cloud-row">
           <span class="cloud-label">API Key</span>
@@ -533,6 +534,8 @@
         const res  = await fetch(`${JBIN_API}/${bin}/latest`, {
           headers: { 'X-Master-Key': key }
         });
+        if (res.status === 401) throw new Error('API Key 오류 — Secret Key를 확인하세요');
+        if (res.status === 404) throw new Error('Bin ID를 찾을 수 없습니다');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const data = json.record;
@@ -577,11 +580,10 @@
         headers: {
           'Content-Type': 'application/json',
           'X-Master-Key': key,
-          'X-Bin-Name': 'mascot-playlist',
-          'X-Private': 'true',
         },
-        body: JSON.stringify(playlist),
+        body: JSON.stringify(playlist.length ? playlist : []),
       });
+      if (res.status === 401) throw new Error('API Key가 올바르지 않습니다.\n대시보드 → API Keys → Secret Key를 사용하세요.');
       if (!res.ok) throw new Error(`Bin 생성 실패 (HTTP ${res.status})`);
       const json = await res.json();
       return json.metadata.id;
