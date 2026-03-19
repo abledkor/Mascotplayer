@@ -167,11 +167,6 @@
       background: rgba(76,175,134,0.15); border: 1px solid var(--green);
       color: var(--green); flex-shrink: 0; white-space: nowrap;
     }
-    .mobile-warn-badge {
-      font-size: 10px; padding: 1px 6px; border-radius: 4px;
-      background: rgba(240,165,0,0.12); border: 1px solid #f0a500;
-      color: #f0a500; flex-shrink: 0; white-space: nowrap;
-    }
     .empty-hint { text-align: center; color: var(--dim); font-size: 13px; padding: 40px 20px; line-height: 1.8; }
 
     /* ── 컨트롤 바 ── */
@@ -347,7 +342,7 @@
   <!-- ── 플레이어 페이지 ── -->
   <main class="page active" id="pagePlayer">
     <div id="videoWrap">
-      <video id="vid" controls playsinline></video>
+      <video id="vid" controls></video>
       <!-- 타이머 오버레이 (우측 상단) -->
       <div id="timerOverlay" style="display:none" onclick="cancelTimer()" title="클릭하여 타이머 해제">
         <span class="timer-countdown" id="timerCountdown">00:00</span>
@@ -356,13 +351,6 @@
         <div class="icon">🎬</div>
         <p>재생할 영상이 없습니다.<br>목록 관리에서 영상 URL을 추가해주세요.</p>
         <button class="go-btn" onclick="showPage('list')">목록 관리로 이동 →</button>
-      </div>
-      <div id="mobileWarn" style="display:none; position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
-        background:rgba(13,13,18,0.9); border:1px solid #f0a500; border-radius:10px;
-        padding:10px 16px; text-align:center; z-index:10; white-space:nowrap;">
-        <span style="font-size:12px; color:#f0a500;">⚠ 재생 실패 — </span>
-        <button onclick="openExternal()" style="font-size:12px; padding:3px 10px; border-radius:6px;
-          background:#f0a500; color:#000; border:none; cursor:pointer; font-weight:600;">브라우저에서 열기</button>
       </div>
     </div>
   </main>
@@ -543,11 +531,9 @@
       const savedRepeat = localStorage.getItem(REPEAT_KEY);
       if (savedList) {
         const parsed = JSON.parse(savedList);
-        playlist = parsed.map(item => {
-          const obj = typeof item === 'string' ? { url: item, normalized: false } : item;
-          if (obj.mobileRestricted === undefined) obj.mobileRestricted = isMobileRestricted(obj.url);
-          return obj;
-        });
+        playlist = parsed.map(item =>
+          typeof item === 'string' ? { url: item, normalized: false } : item
+        );
       }
       if (savedRepeat) repeatInput.value = savedRepeat;
 
@@ -588,12 +574,8 @@
       if (playlist.length === 0) { showEmpty(true); return; }
       currentIndex = ((index % playlist.length) + playlist.length) % playlist.length;
       playCount    = 0;
-      const item   = playlist[currentIndex];
-      const isMR   = typeof item === 'object' && item.mobileRestricted;
-      vid.referrerPolicy = (isMR && !IS_MOBILE) ? 'no-referrer' : '';
-      vid.src      = resolvePlayUrl(item);
+      vid.src      = getUrl(playlist[currentIndex]);
       showEmpty(false);
-      document.getElementById('mobileWarn').style.display = 'none';
       renderList();
       if (autoplay) vid.play().catch(e => console.warn('play() blocked:', e));
     }
@@ -614,16 +596,7 @@
       }
     }
 
-    function onError() {
-      const item = playlist[currentIndex];
-      const isMR = item && typeof item === 'object' && item.mobileRestricted;
-      if (isMR) {
-        // 프록시 실패 시 외부 열기 안내
-        document.getElementById('mobileWarn').style.display = '';
-        return;
-      }
-      setTimeout(() => nextVideo(), 1500);
-    }
+    function onError() { setTimeout(() => nextVideo(), 1500); }
 
     function getRepeat() { return Math.max(1, parseInt(repeatInput.value) || 1); }
 
@@ -725,11 +698,9 @@ if (playMode === 'shuffle') {
         const data = json.record;
         if (!Array.isArray(data)) throw new Error('형식 오류');
 
-        playlist = data.map(item => {
-          const obj = typeof item === 'string' ? { url: item, normalized: false } : item;
-          if (obj.mobileRestricted === undefined) obj.mobileRestricted = isMobileRestricted(obj.url);
-          return obj;
-        });
+        playlist = data.map(item =>
+          typeof item === 'string' ? { url: item, normalized: false } : item
+        );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(playlist));
         renderList();
         if (playlist.length > 0 && vid.src === '') loadVideo(0, false);
@@ -841,33 +812,6 @@ if (playMode === 'shuffle') {
       } catch { return { url: rawUrl, changed: false }; }
     }
 
-    // ── 모바일 제한 도메인 감지 ──
-    const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const CORS_PROXY = 'https://corsproxy.io/?url=';
-
-    const MOBILE_RESTRICTED_HOSTS = [
-      'etoland.co.kr',
-    ];
-    function isMobileRestricted(rawUrl) {
-      try {
-        const host = new URL(rawUrl).hostname;
-        return MOBILE_RESTRICTED_HOSTS.some(h => host === h || host.endsWith('.' + h));
-      } catch { return false; }
-    }
-
-    // 모바일 + 제한 도메인이면 CORS 프록시 경유
-    function resolvePlayUrl(item) {
-      const url = getUrl(item);
-      if (IS_MOBILE && typeof item === 'object' && item.mobileRestricted) {
-        return CORS_PROXY + encodeURIComponent(url);
-      }
-      return url;
-    }
-
-    function openExternal() {
-      const url = playlist[currentIndex] ? getUrl(playlist[currentIndex]) : '';
-      if (url) window.open(url, '_blank');
-    }
 
     // ── 토스트 ──
     let toastTimer = null;
@@ -887,8 +831,7 @@ if (playMode === 'shuffle') {
       let normCount  = 0;
       raw.split(/\n/).map(u => u.trim()).filter(Boolean).forEach(line => {
         const { url, changed } = normalizeCivitaiUrl(line);
-        const mobileRestricted = isMobileRestricted(url);
-        playlist.push({ url, normalized: changed, mobileRestricted });
+        playlist.push({ url, normalized: changed });
         if (changed) normCount++;
       });
       savePlaylist();
@@ -928,11 +871,9 @@ if (playMode === 'shuffle') {
         try {
           const parsed = JSON.parse(e.target.result);
           if (!Array.isArray(parsed)) throw new Error();
-          playlist = parsed.map(item => {
-            const obj = typeof item === 'string' ? { url: item, normalized: false } : item;
-            if (obj.mobileRestricted === undefined) obj.mobileRestricted = isMobileRestricted(obj.url);
-            return obj;
-          });
+          playlist = parsed.map(item =>
+            typeof item === 'string' ? { url: item, normalized: false } : item
+          );
           savePlaylist();
           renderList();
           if (playlist.length > 0) loadVideo(0, false);
@@ -962,7 +903,6 @@ if (playMode === 'shuffle') {
       playlist.forEach((item, i) => {
         const url   = getUrl(item);
         const norm  = typeof item === 'object' && item.normalized;
-        const isMR  = typeof item === 'object' && item.mobileRestricted;
         const isCur = (i === currentIndex);
         const label = url.length > 66 ? url.slice(0, 63) + '…' : url;
 
@@ -975,7 +915,6 @@ if (playMode === 'shuffle') {
           <span class="drag-handle" title="드래그하여 순서 변경">⠿</span>
           <span class="item-num">${i + 1}</span>
           ${norm ? '<span class="norm-badge">최적화</span>' : ''}
-          ${isMR ? '<span class="mobile-warn-badge" title="모바일 브라우저에서 재생 불가능할 수 있습니다">⚠ 모바일</span>' : ''}
           <span class="item-url" title="${escHtml(url)}">${escHtml(label)}</span>
           <button class="item-play">▶ 재생</button>
           <button class="item-del">삭제</button>`;
