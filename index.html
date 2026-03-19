@@ -173,9 +173,11 @@
     /* ── 컨트롤 바 ── */
     #controls {
       display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px; background: var(--surface);
-      border-top: 1px solid var(--border); flex-shrink: 0;
+      padding: 10px 40px 10px 10px; background: var(--surface);
+      border-top: 1px solid var(--border);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
     }
+    .page { padding-bottom: 70px; }
     .tabs { display: flex; gap: 4px; }
     .tab {
       padding: 5px 13px; border-radius: 6px; border: 1px solid var(--border);
@@ -416,9 +418,7 @@
     <div class="sep"></div>
     <div class="play-btns">
       <button class="cbtn" title="이전"           onclick="prevVideo()">⏮</button>
-      <button class="cbtn" title="처음부터"        onclick="restartCurrent()">⟳</button>
       <button class="cbtn main" id="btnPP"        onclick="togglePlayPause()">⏸</button>
-      <button class="cbtn" title="반복 건너뛰기"   onclick="skipRepeat()">↪</button>
       <button class="cbtn" title="다음"            onclick="nextVideo()">⏭</button>
     </div>
     <div class="sep"></div>
