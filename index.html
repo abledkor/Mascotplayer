@@ -574,7 +574,9 @@
       if (playlist.length === 0) { showEmpty(true); return; }
       currentIndex = ((index % playlist.length) + playlist.length) % playlist.length;
       playCount    = 0;
-      vid.src      = getUrl(playlist[currentIndex]);
+      const url    = getUrl(playlist[currentIndex]);
+      vid.referrerPolicy = needsNoReferrer(url) ? 'no-referrer' : '';
+      vid.src      = url;
       showEmpty(false);
       renderList();
       if (autoplay) vid.play().catch(e => console.warn('play() blocked:', e));
@@ -792,6 +794,17 @@ if (playMode === 'shuffle') {
       const arrow = document.getElementById('cloudArrow');
       const open  = body.classList.toggle('open');
       arrow.classList.toggle('open', open);
+    }
+
+    // ── Referer 차단 도메인 ──
+    const NO_REFERRER_HOSTS = [
+      'etoland.co.kr',
+    ];
+    function needsNoReferrer(url) {
+      try {
+        const host = new URL(url).hostname;
+        return NO_REFERRER_HOSTS.some(h => host === h || host.endsWith('.' + h));
+      } catch { return false; }
     }
 
     // ── URL 정규화 (civitai) ──
